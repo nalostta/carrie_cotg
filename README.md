@@ -11,12 +11,16 @@ Proof of concept of the project Code-On-The-Go (COTG)
 2.run the following commands:
   - mkdir build
   - mkdir build/logs
+  - mkdir pipes
+  - mkfifo pipes/fromTG.fifo -m0666
+  - mkfifo pipes/toTG.fifo -m0666
+  - mkfifo pipes/pass_chatId.fifo -m0666
   - cd build
   - cmake ../
     
 3.Build the 3 targets required for the application to run : carrie, fromTG, toTG
 4.Before running these executables, set the TERM variable to dumb to remove excess characters printed during the output.
-5.Start 3 seperate terminals and all the above 3 programs.
+6.Start 3 seperate terminals and all the above 3 programs.
 
 ## Modifying application : 
 
