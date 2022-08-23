@@ -18,7 +18,7 @@ Proof of concept of the project Code-On-The-Go (COTG)
   - cd build
   - cmake ../
     
-3.Build the 3 targets required for the application to run : carrie, fromTG, toTG
+3.Build the 3 targets required for the application to run : carrie, fromTG, toTG (in the build folder : cmake --build . --target carrie fromTG toTG)
 
 4.Before running these executables, set the TERM variable to dumb to remove excess characters printed during the output.
 
