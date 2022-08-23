@@ -19,9 +19,12 @@ Proof of concept of the project Code-On-The-Go (COTG)
   - cmake ../
     
 3.Build the 3 targets required for the application to run : carrie, fromTG, toTG
+
 4.Before running these executables, set the TERM variable to dumb to remove excess characters printed during the output.
+
 6.Start 3 seperate terminals and all the above 3 programs.
 
+---
 ## Modifying application : 
 
 currently the fromTG and toTG have the token for the telegram bot hardcoded. Incase if you're creating a new telegram bot to test this on, update the token key and rebuild the applications. In successive versions, this method needs to be replaced with better ones.
