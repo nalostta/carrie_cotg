@@ -50,23 +50,24 @@ auto main() -> int
     }
     else
     {
-        std::cout << "toTG fifo opened";
+        std::cout << "\n\ntoTG fifo opened\n\n";
     }
 
-    for (;;)
+    while(1)
     {
         rc = read(toTG, buf, BUF_SIZE);
+        std::cout<< ".";
+        char buf2[BUF_SIZE] = {0};
         if (rc > 0)
         {
-            //std::string const temp(buf);
-            //std::cout << std::endl
-            //         << "msg : " << buf;
-            //std::cout<< "toTG > " << buf << std::endl;
-            char buf2[250];
+            printf("\n[debug] : received text : %s\n",buf);
             int j=0;
             for(int i=0;i<250;i++)
             {
-                if(buf[i]!='\0' && buf[i] !='@' && buf[i] !='^' )
+                if(buf[i] =='^' && buf[i+1]=='@')
+                {
+                    i+=3;
+                }else
                 {
                     buf2[j++] = buf[i];
                 }
@@ -81,22 +82,10 @@ auto main() -> int
                 }
                 flag = 0;
             }
-
-            buf2[j] = '\0';
-            
             std::string temp(buf2);
-            /*if (odd)
-            {
-                odd = 0;
-                sender.send_message(my_chat_id, temp);
-            }
-            else
-            {
-                odd = 1;
-                
-            }*/
-
             sender.send_message(my_chat_id, temp);
+            for(int i=0;i<BUF_SIZE;i++) buf[i] = 0;
+
         }
     }
     exit(0);

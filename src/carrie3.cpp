@@ -3,26 +3,26 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sstream>
 #define __USE_BSD
 #include <termios.h>
-#include <iostream>
 #include <sys/select.h>
 #include <sys/ioctl.h>
+#include <string.h>
+#include <regex>
+
 #include "logger.hpp"
 
-int main(int ac, char* av[])
+int main(int ac, char *av[])
 {
-    int fdm, fds, rc;
-    char input[150];
-    std::cout<<"start"<<std::endl;
-    logger parent("carrie3_parent.info.log");
+    int fdm, fds;
+    int rc;
+    char input[250];
 
-    std::cout<<"is File Open? : " << parent.isFileOpen();
-
-
+    logger parent("logs/carrie3_parent.info.log");
     parent.log("start");
 
-    int fromTG = open("fromTG.fifo", O_RDONLY);
+    int fromTG = open("../pipes/fromTG.fifo", O_RDONLY);
     if (fromTG < 1)
     {
         printf("failed to open fromTG");
@@ -30,6 +30,16 @@ int main(int ac, char* av[])
     }
     parent.log("opened fromTG FIFO");
 
+    int toTG = open("../pipes/toTG.fifo", O_WRONLY);
+    if (toTG < 1)
+    {
+        printf("failed to open toTG");
+        exit(-1);
+    }
+
+    parent.log("opened toTG FIFO");
+
+    // Check arguments
     if (ac <= 1)
     {
         fprintf(stderr, "Usage: %s program_name [parameters]\n", av[0]);
@@ -57,61 +67,115 @@ int main(int ac, char* av[])
         return 1;
     }
 
-    // Open the slave PTY
+    // Open the slave side ot the PTY
     fds = open(ptsname(fdm), O_RDWR);
 
-    // Creation of a child process
+    parent.log("before fork");
+
+    // Create the child process
     if (fork())
     {
-        // Father
+        fd_set fd_in;
+
+        // FATHER
+        parent.log("Entered Parent thread");
 
         // Close the slave side of the PTY
         close(fds);
+
         while (1)
         {
-            // Operator's entry (standard input = terminal)
-            write(1, "Input : ", sizeof("Input : "));
-            memset(input,'\0',sizeof(input));
-            rc = read(fromTG, input, sizeof(input));
-            if (rc > 0)
+            // Wait for data from standard input and master side of PTY
+            FD_ZERO(&fd_in);
+            FD_SET(fromTG, &fd_in);
+            FD_SET(fdm, &fd_in);
+
+            rc = select(std::max(fdm, fromTG) + 1, &fd_in, NULL, NULL, NULL);
+            switch (rc)
             {
-                // Send the input to the child process through the PTY
-                write(fdm, input, rc);
+            case -1:
+                fprintf(stderr, "Error %d on select()\n", errno);
+                exit(1);
 
-                // Get the child's answer through the PTY
-                rc = read(fdm, input, sizeof(input) - 1);
-                if (rc > 0)
+            default:
+            {
+                // If data on standard input
+                if (FD_ISSET(fromTG, &fd_in))
                 {
-                    // Make the answer NUL terminated to display it as a string
-                    input[rc] = '\0';
-
-                    fprintf(stderr, "%s", input);
+                    rc = read(fromTG, input, sizeof(input));
+                    if (rc > 0)
+                    {
+                        // Send data on the master side of PTY
+                        parent.logSL("data (fromTG) writing to fdm: ");
+                        parent.logNS(input);
+                        input[strlen(input)] = '\n';
+                        write(fdm, input, rc);
+                        write(1, input, rc);
+                    }
+                    else
+                    {
+                        if (rc < 0)
+                        {
+                            fprintf(stderr, "Error %d on read standard input\n", errno);
+                            exit(1);
+                        }
+                    }
                 }
-                else
+
+                // If data on master side of PTY
+                if (FD_ISSET(fdm, &fd_in))
                 {
-                    break;
+                    parent.logSL("data from the remote shell (pty master)");
+                    char temp_input[50];
+                    rc = read(fdm, temp_input, sizeof(temp_input));
+                    if (rc > 0)
+                    {
+                        // Send data on standard output (toTG)
+                        //parent.logNS(input);
+                        //
+                        //filtered_str = std::regex_replace(filtered_str, std::regex("?2004h"), " ");
+                        //filtered_str = std::regex_replace(filtered_str, std::regex("^@"), " ");
+                        //parent.log(filtered_str);
+                        write(1, temp_input, rc);
+                        //
+                        /*char t[250];                
+                        int i=0;            
+                        while(temp_input[i]!='\0')
+                        {
+                            t[i] = temp_input[i];
+                            i++;
+                        }
+                        parent.logSL("temp_input to toTG = ");
+                        parent.logNS(t);*/
+                        write(toTG, temp_input, rc);
+                    }
+                    else
+                    {
+                        if (rc < 0)
+                        {
+                            fprintf(stderr, "Error %d on read master PTY\n", errno);
+                            exit(1);
+                        }
+                    }
                 }
             }
-            else
-            {
-                break;
-            }
-        } // End while
+            } // End switch
+        }     // End while
     }
     else
     {
         struct termios slave_orig_term_settings; // Saved terminal settings
         struct termios new_term_settings;        // Current terminal settings
 
-        // Child
+        // CHILD
 
         // Close the master side of the PTY
         close(fdm);
 
-        // Save the default parameters of the slave side of the PTY
+        // Save the defaults parameters of the slave side of the PTY
         rc = tcgetattr(fds, &slave_orig_term_settings);
 
-        // Set raw mode on the slave side of the PTY
+        // Set RAW mode on slave side of PTY
         new_term_settings = slave_orig_term_settings;
         cfmakeraw(&new_term_settings);
         tcsetattr(fds, TCSANOW, &new_term_settings);
@@ -125,12 +189,16 @@ int main(int ac, char* av[])
         dup(fds); // PTY becomes standard output (1)
         dup(fds); // PTY becomes standard error (2)
 
+        // Now the original file descriptor is useless
         close(fds);
 
+        // Make the current process a new session leader
         setsid();
-        ioctl(0, TIOCSCTTY, 1);
 
-        logger child("carrie3_child.info.log");
+        // As the child is a session leader, set the controlling terminal to be the slave side of the PTY
+        // (Mandatory for programs like the shell to make them manage correctly their outputs)
+        ioctl(0, TIOCSCTTY, 1);
+        info.log("before execution of program");
 
         // Execution of the program
         {
@@ -139,21 +207,24 @@ int main(int ac, char* av[])
 
             // Build the command line
             child_av = (char **)malloc(ac * sizeof(char *));
-            std::string t("before loop,\tac = " + std::to_string(ac) + "\tfollowing cmds are passed on:");
-            child.log(t);
+            //std::string t("before loop,\tac = " + std::to_string(ac) + "\tfollowing cmds are passed on:");
+            //info.log(t);
             for (i = 1; i < ac; i++)
             {
                 child_av[i - 1] = strdup(av[i]);
-                child.log(av[i]);
+                //info.log(av[i]);
             }
             child_av[i - 1] = NULL;
 
-            std::string t3(child_av[0]);
-            std::string t2("executing cmd : " + t3);
-            child.log(t2);
+            //std::string t3(child_av[0]);
+            //std::string t2("executing cmd : " + t3);
+            //info.log(t2);
             rc = execvp(child_av[0], child_av);
-            child.log("executed");
+            //info.log("executed");
         }
+
+        // if Error...
+        return 1;
     }
 
     return 0;

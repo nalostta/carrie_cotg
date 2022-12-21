@@ -30,6 +30,7 @@ int main()
 
         if (rc > 0)
         {
+            printf("\nread %d characters",rc);
             printf("\n > %s", buf);
         }
     }

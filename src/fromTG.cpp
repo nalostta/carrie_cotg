@@ -10,8 +10,10 @@
 
 #include "logger.hpp"
 
+const int MSG_BUF_LEN=250;
+
 int fromTG;
-char temp[250];
+char temp[MSG_BUF_LEN];
 
 int flag = 1;
 auto main() -> int
@@ -61,12 +63,10 @@ auto main() -> int
         }
             strcpy(temp,message.text->c_str());
             std::cout<< "\n[debug] : " << temp;
-            //
             info.logSL("received message :");
             info.logNS(*message.text);
             write(fromTG, temp, sizeof(temp));
-            info.logSL("writing to fromTG FIFO :");
-            info.logNS(temp);
+            memset(temp,0,MSG_BUF_LEN);
         });
         listener.run();
         return EXIT_SUCCESS;

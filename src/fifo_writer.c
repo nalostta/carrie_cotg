@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 
 int main()
@@ -20,6 +21,7 @@ int main()
     }
 
     char buf[BUF_SIZE];
+    char buf2[BUF_SIZE];
     int rc = 0;
 
     printf("\nReady for inputs...");
@@ -30,7 +32,16 @@ int main()
 
         if (rc > 0)
         {
+            printf("read %d characters from stdout",rc);
+            int i=0;
+            for(int i=0;i<rc;i++)
+            {
+                printf(" %c : %d\n",buf[i],(int)buf[i]);
+                buf2[i] = buf[i];
+            }
+            printf("\nwriting %s",buf);
             write(test_fifo,buf,BUF_SIZE);
+            for(int i=0;i<BUF_SIZE;i++)buf[i]=0;
         }
     }
     exit(0);
