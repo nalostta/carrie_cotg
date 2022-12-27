@@ -4,11 +4,11 @@ Proof of concept of the project Code-On-The-Go (COTG)
 
 ## Installation Process
 
-1. Ensure that your system has the following installed on your system:
+1. [Pre-Requisites] : Ensure that your system has the following installed on your system:
   - OpenSSL
   - Boost
 
-2.run the following commands:
+2. [Steps] : run the following commands in sequence:
   - mkdir build
   - mkdir build/logs
   - mkdir pipes
