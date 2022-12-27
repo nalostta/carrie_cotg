@@ -31,7 +31,7 @@ cmake --build . --target carrie fromTG toTG
 ./fromTG
 ```
 ```
-./carrie zsh
+./carrie sh
 ```
 ```
 ./toTG
