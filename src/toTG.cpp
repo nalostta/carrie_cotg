@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <fstream>
 
 #include <libtelegram/libtelegram.h>
 #define MSG_COUNT_MAX 30
@@ -11,8 +12,11 @@
 void dbg(const char *dbgmsg) { std::cout << "[debug] : " << dbgmsg; }
 bool is_utf8(const char *str);
 
+char* process_codes(char* inp);
+
 int odd = 0;
 int flag = 0;
+
 
 auto main() -> int
 {
@@ -23,6 +27,11 @@ auto main() -> int
     int rc = 0;
     int64_t my_chat_id = 0;
     int msg_count = 0;
+
+    //create a logfile for later analysis
+    std::ofstream log;
+    log.open("logs/toTG_logs.txt");
+    log << "[begin]" << std::endl;
 
     int test_fifo = open("../pipes/pass_chatId.fifo", O_RDONLY);
     if (test_fifo < 1)
@@ -83,10 +92,20 @@ auto main() -> int
                 flag = 0;
             }
             std::string temp(buf2);
+            // write to log file for later analysis
+            log << temp << std::endl;
             sender.send_message(my_chat_id, temp);
             for(int i=0;i<BUF_SIZE;i++) buf[i] = 0;
 
         }
     }
+    log.close();
     exit(0);
+}
+
+char* process_codes(char* inp)
+{
+    char esc_code_start = "[?2004l";
+    char esc_code_end = "[?2004h";
+    return 
 }

@@ -37,12 +37,18 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extrlibs/libtelegram/include)
 include_directories(/opt/homebrew/Cellar/boost/1.79.0_1/include)
 include_directories(/opt/homebrew/opt/openssl/include)
 
+
+#-------------Add All Ahe Executables Here--------------
 add_executable(carrie src/carrie2.cpp src/logger.cpp)
 add_executable(fromTG src/fromTG.cpp src/logger.cpp) 
 add_executable(toTG src/toTG.cpp src/logger.cpp)
 
 add_executable(fifo_reader src/fifo_reader.c src/logger.cpp) 
 add_executable(fifo_writer src/fifo_writer.c src/logger.cpp)
+
+add_executable(ansi_processor src/ansi_code_process.cpp)
+
+#---------------------------------------------------------
 
 target_link_libraries(fromTG ${link_libs})
 target_link_libraries(toTG ${link_libs})
