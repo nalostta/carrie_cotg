@@ -23,7 +23,7 @@ Proof of concept of the project Code-On-The-Go (COTG)
 3. [Build] : Build the following 3 targets : carrie, fromTG, toTG 
 in the build folder run: 
 ```
-cmake --build . --target carrie fromTG toTG)
+cmake --build . --target carrie fromTG toTG
 ```
 
 4. [Run] : Open three separate terminals and in the build folder, run the following applications:
