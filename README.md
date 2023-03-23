@@ -49,11 +49,13 @@ In successive versions, this method needs to be replaced with better ones.
 
 This project has many opportunities to improve on, including:
 <ul>
+  <li> Do a market research survey to identify need and price point.
   <li> Extend this work to support Discord.
   <li> Include support for text-color and application specific commands (eg. clear/cls clears the telegram window instead of the remote terminal)
   <li> Ability to transfer file to the remote system within the chat-interface.
   <li> Add security measures like MFA and SUDO-commands monitoring to prevent accidental damage or unauthorized usage.
-  <li> Support for Escape-Sequences (Edit/modify existing response-text to anaimate a progress bar)
+  <li> Support for Escape-Sequences (Edit/modify existing response-text to animate a progress bar)
+  <li> Command black/white-listing (Regex) and directory compartmentalization.
 </ul>
 
 ## Contribution:
